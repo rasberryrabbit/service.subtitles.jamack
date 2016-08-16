@@ -233,7 +233,7 @@ def get_files(url):
     content_file = read_url(url)
     files = re.findall(file_pattern,content_file)
     for flink,dummy,name in files:
-        ret_list.append([url, name.strip(), base_page+flink])
+        ret_list.append([url, name.strip(), base_page+flink.replace("&amp;","&")])
     return ret_list
     
 def check_season_episode(str_title, se, ep):
@@ -424,10 +424,7 @@ if params['action'] == 'search' or params['action'] == 'manualsearch':
     search(item)
 
 elif params['action'] == 'download':
-    if params['url'].find("bunyuc.com")!=-1:
-        subs = download_file_bun(urllib2.unquote(params['url']),urllib2.unquote(params['furl']),params['name'])
-    else:    
-        subs = download_file(urllib2.unquote(params['url']),urllib2.unquote(params['furl']),params['name'])
+    subs = download_file(urllib2.unquote(params['url']),urllib2.unquote(params['furl']),params['name'])
     for sub in subs:
         listitem = xbmcgui.ListItem(label=sub)
         xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=sub,listitem=listitem,isFolder=False)
