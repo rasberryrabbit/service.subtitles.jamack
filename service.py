@@ -233,7 +233,7 @@ def get_files(url):
     content_file = read_url(url)
     files = re.findall(file_pattern,content_file)
     for flink,dummy,name in files:
-        ret_list.append([url, name.strip(), base_page+flink.replace("&amp;","&")])
+        ret_list.append([url, name.strip().replace("...","---"), base_page+flink.replace("&amp;","&")])
     return ret_list
     
 def check_season_episode(str_title, se, ep):
