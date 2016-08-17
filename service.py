@@ -353,11 +353,14 @@ def download_file(url,furl,name):
     # Download File
     req2 = urllib2.Request(furl,headers={'User-Agent': user_agent})
     res2 = opener2.open(req2)
-    local_file_handle = open( local_temp_file, "wb" )
-    buf = force_utf8(res2.read())
-    local_file_handle.write(buf)
-    local_file_handle.close()
-    subtitle_list.append(local_temp_file)
+    #buf = force_utf8(res2.read())
+    buf = res2.read()
+    # 하루의 10번 메시지를 체크.
+    if buf.find("(10번)을 넘었습니다.")!=-1:
+        local_file_handle = open( local_temp_file, "wb" )
+        local_file_handle.write(buf)
+        local_file_handle.close()
+        subtitle_list.append(local_temp_file)
     return subtitle_list
  
 def search(item):
