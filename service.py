@@ -233,7 +233,7 @@ def get_files(url):
     content_file = read_url(url)
     files = re.findall(file_pattern,content_file)
     for flink,dummy,name in files:
-        ret_list.append([url, name.strip().replace("...","---"), base_page+flink.replace("&amp;","&")])
+        ret_list.append([url, name.strip(), base_page+flink.replace("&amp;","&")])
     return ret_list
     
 def check_season_episode(str_title, se, ep):
@@ -258,6 +258,10 @@ def check_season_episode(str_title, se, ep):
             result = 2
     return result
 
+def strip_tag(buf):
+    strip_expr = re.compile("<[^>]+>")
+    return strip_expr.sub("",buf)
+
 # 페이지의 내용을 추출해서 링크를 얻어냄. 그리고 링크를 리스트에 추가.
 def get_list(url, limit_file, list_mode):
     search_pattern = "<dt><a href=\"([^\"]+)\"[^>]+>(.+)</a>"
@@ -280,6 +284,8 @@ def get_list(url, limit_file, list_mode):
                 continue
             except Exception as e:
                 raise
+                
+            title_name = strip_tag(title_name)
 
             for furl,name,flink in list_files:
                 if use_se_ep_check == "true":
@@ -308,6 +314,35 @@ def get_list(url, limit_file, list_mode):
 
     return result, link_count
 
+def check_smi_sync(buf):
+    sync_expr = re.compile("<sync start(\s+)?=(\s+)?(\")?(\D+)?>",re.I)
+    strip_tag_expr = re.compile("<[^>]+>")
+    while True:    
+        m = sync_expr.search(buf)
+        if m:
+            n = strip_tag_expr.search(buf,m.span()[0])
+            if n:
+                buf = buf[:n.span()[0]]+buf[n.span()[1]:]
+        else:
+            break
+    return buf    
+
+def force_utf8(buf):
+    sami_expr = re.compile("<sami>",re.I)
+    if sami_expr.search(buf):
+        buf = check_smi_sync(buf)
+        try:
+            buf.decode('utf-8')
+            IsUTF8 = True
+        except:
+            IsUTF8 = False
+        if not IsUTF8:
+            try:
+                buf = buf.decode('euc-kr').encode('utf-8')
+            except:
+                pass
+    return buf
+
 # 사이트에서 파일을 다운로드.
 def download_file(url,furl,name):
     subtitle_list = []
@@ -319,7 +354,8 @@ def download_file(url,furl,name):
     req2 = urllib2.Request(furl,headers={'User-Agent': user_agent})
     res2 = opener2.open(req2)
     local_file_handle = open( local_temp_file, "wb" )
-    local_file_handle.write(res2.read())
+    buf = force_utf8(res2.read())
+    local_file_handle.write(buf)
     local_file_handle.close()
     subtitle_list.append(local_temp_file)
     return subtitle_list
